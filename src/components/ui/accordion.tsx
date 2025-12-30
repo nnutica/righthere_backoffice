@@ -15,7 +15,7 @@ const AccordionItem = React.forwardRef<
   <details
     ref={ref}
     className={cn(
-      "rounded-lg border border-[var(--hud-panel-border)] bg-[var(--hud-panel-strong)]",
+      "rounded-lg border border-(--hud-panel-border) bg-(--hud-panel-strong)",
       className
     )}
     {...props}
@@ -24,8 +24,8 @@ const AccordionItem = React.forwardRef<
 AccordionItem.displayName = "AccordionItem";
 
 const AccordionTrigger = React.forwardRef<
-  HTMLSummaryElement,
-  React.HTMLAttributes<HTMLSummaryElement>
+  HTMLMapElement,
+  React.HTMLAttributes<HTMLMapElement>
 >(({ className, ...props }, ref) => (
   <summary
     ref={ref}
@@ -40,7 +40,7 @@ AccordionTrigger.displayName = "AccordionTrigger";
 
 const AccordionContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("px-4 pb-4 text-sm text-[var(--hud-muted)]", className)} {...props} />
+    <div ref={ref} className={cn("px-4 pb-4 text-sm text-(--hud-muted)", className)} {...props} />
   )
 );
 AccordionContent.displayName = "AccordionContent";
