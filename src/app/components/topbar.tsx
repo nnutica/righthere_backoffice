@@ -41,13 +41,13 @@ export default function Topbar({ email }: TopbarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Signed in</DropdownMenuLabel>
-              <DropdownMenuItem className="text-sm text-[var(--hud-muted)]">
+              <DropdownMenuItem className="text-sm text-(--hud-muted)">
                 {email}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => auth.signOut()}
-                className="text-[var(--hud-danger)]"
+                className="text-(--hud-danger)"
               >
                 <LogOut className="h-4 w-4" />
                 Logout

@@ -140,7 +140,7 @@ export default function CommunityGuardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Content</TableHead>
-                      <TableHead>Likes</TableHead>
+                      
                       <TableHead>Created</TableHead>
                       <TableHead>Style</TableHead>
                       <TableHead>Actions</TableHead>
@@ -171,7 +171,7 @@ export default function CommunityGuardPage() {
                           <TableCell className="max-w-[320px] truncate">
                             {post.Content ?? "n/a"}
                           </TableCell>
-                          <TableCell>{post.Likes ?? 0}</TableCell>
+                  
                           <TableCell>{formatDate(post.CreatedAt)}</TableCell>
                           <TableCell className="text-xs text-(--hud-muted)">
                             {post.PostItColor ?? "n/a"} / {post.TextColor ?? "n/a"}
