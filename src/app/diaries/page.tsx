@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { collection, getDocs, limit, orderBy, query, Timestamp } from "firebase/firestore";
 import { db } from "@/libs/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,17 +15,9 @@ type DiaryAIItem = {
   mood?: string;
   sentimentScore?: number;
   keywords?: string[] | string;
-  modelVersion?: string;
-  latencyMs?: number;
   error?: string | null;
   createdAt?: Timestamp;
 };
-
-function maskId(value?: string) {
-  if (!value) return "unknown";
-  if (value.length <= 8) return value;
-  return `${value.slice(0, 4)}...${value.slice(-4)}`;
-}
 
 function formatTimestamp(ts?: Timestamp) {
   if (!ts) return "Unknown";
@@ -44,6 +36,7 @@ function formatKeywords(value?: string[] | string) {
 }
 
 export default function DiaryTestPage() {
+  const router = useRouter();
   const [entries, setEntries] = useState<DiaryAIItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState("");
@@ -85,7 +78,7 @@ export default function DiaryTestPage() {
         end.setHours(23, 59, 59, 999);
         if (entryDate > end) return false;
       }
-      if (mood && entry.mood !== mood) return false;
+      if (mood && entry.mood?.toLowerCase() !== mood) return false;
       if (hasError === "error" && !entry.error) return false;
       if (hasError === "ok" && entry.error) return false;
       return true;
@@ -96,7 +89,7 @@ export default function DiaryTestPage() {
     <div className="space-y-6">
       <div>
         <h2 className="font-display text-2xl font-semibold">DiaryTest</h2>
-        <p className="text-sm text-[var(--hud-muted)]">
+        <p className="text-sm text-(--hud-muted)">
           AI results only. Diary content is never shown.
         </p>
       </div>
@@ -106,23 +99,22 @@ export default function DiaryTestPage() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-4">
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(event) => setStartDate(event.target.value)}
-            placeholder="Start date"
-          />
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(event) => setEndDate(event.target.value)}
-            placeholder="End date"
-          />
-          <Input
+          
+          <select
             value={mood}
-            onChange={(event) => setMood(event.target.value)}
-            placeholder="Mood (e.g. calm)"
-          />
+            onChange={(event) => setMood(event.target.value.toLowerCase())}
+            className="h-11 w-full rounded-md border border-(--hud-panel-border) bg-(--hud-panel-strong) px-3 text-sm text-slate-100"
+          >
+            <option value="">All moods</option>
+            <option value="happiness">Happiness</option>
+            <option value="joy">Joy</option>
+            <option value="fear">Fear</option>
+            <option value="anger">Anger</option>
+            <option value="sadness">Sadness</option>
+            <option value="disgust">Disgust</option>
+            <option value="love">Love</option>
+            <option value="surprise">Surprise</option>
+          </select>
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -155,45 +147,50 @@ export default function DiaryTestPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-[var(--hud-muted)]">Loading AI results...</p>
+            <p className="text-sm text-(--hud-muted)">Loading AI results...</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Created</TableHead>
-                  <TableHead>User</TableHead>
                   <TableHead>Mood</TableHead>
                   <TableHead>Sentiment</TableHead>
                   <TableHead>Keywords</TableHead>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Latency</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-sm text-[var(--hud-muted)]">
+                    <TableCell colSpan={8} className="text-sm text-(--hud-muted)">
                       No AI entries match the filters.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filtered.map((entry) => (
-                    <TableRow key={entry.id}>
+                    <TableRow
+                      key={entry.id}
+                      className="cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open diary ${entry.id}`}
+                      onClick={() => router.push(`/diaries/${entry.id}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          router.push(`/diaries/${entry.id}`);
+                        }
+                      }}
+                    >
                       <TableCell>{formatTimestamp(entry.createdAt)}</TableCell>
-                      <TableCell>{maskId(entry.userId)}</TableCell>
                       <TableCell>{entry.mood ?? "n/a"}</TableCell>
                       <TableCell>
                         {typeof entry.sentimentScore === "number"
                           ? entry.sentimentScore.toFixed(2)
                           : "n/a"}
                       </TableCell>
-                      <TableCell className="max-w-[180px] truncate">
+                      <TableCell className="max-w-45 truncate">
                         {formatKeywords(entry.keywords)}
-                      </TableCell>
-                      <TableCell>{entry.modelVersion ?? "n/a"}</TableCell>
-                      <TableCell>
-                        {typeof entry.latencyMs === "number" ? `${entry.latencyMs}ms` : "n/a"}
                       </TableCell>
                       <TableCell>
                         {entry.error ? (

@@ -17,6 +17,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type PostItem = {
   id: string;
@@ -48,6 +55,8 @@ export default function CommunityGuardPage() {
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState<PostItem | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const loadData = async () => {
     try {
@@ -98,11 +107,16 @@ export default function CommunityGuardPage() {
     await loadData();
   };
 
+  const openPost = (post: PostItem) => {
+    setSelectedPost(post);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="font-display text-2xl font-semibold">Community Guard</h2>
-        <p className="text-sm text-[var(--hud-muted)]">
+        <p className="text-sm text-(--hud-muted)">
           Moderate posts and resolve reports from Firestore.
         </p>
       </div>
@@ -120,12 +134,11 @@ export default function CommunityGuardPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-sm text-[var(--hud-muted)]">Loading posts...</p>
+                <p className="text-sm text-(--hud-muted)">Loading posts...</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Author</TableHead>
                       <TableHead>Content</TableHead>
                       <TableHead>Likes</TableHead>
                       <TableHead>Created</TableHead>
@@ -136,28 +149,53 @@ export default function CommunityGuardPage() {
                   <TableBody>
                     {posts.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-sm text-[var(--hud-muted)]">
+                        <TableCell colSpan={6} className="text-sm text-(--hud-muted)">
                           No posts found.
                         </TableCell>
                       </TableRow>
                     ) : (
                       posts.map((post) => (
-                        <TableRow key={post.id}>
-                          <TableCell>{post.Author ?? "n/a"}</TableCell>
+                        <TableRow
+                          key={post.id}
+                          className="cursor-pointer"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openPost(post)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              openPost(post);
+                            }
+                          }}
+                        >
                           <TableCell className="max-w-[320px] truncate">
                             {post.Content ?? "n/a"}
                           </TableCell>
                           <TableCell>{post.Likes ?? 0}</TableCell>
                           <TableCell>{formatDate(post.CreatedAt)}</TableCell>
-                          <TableCell className="text-xs text-[var(--hud-muted)]">
+                          <TableCell className="text-xs text-(--hud-muted)">
                             {post.PostItColor ?? "n/a"} / {post.TextColor ?? "n/a"}
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-2">
-                              <Button size="sm" variant="secondary" onClick={() => hidePost(post)}>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  hidePost(post);
+                                }}
+                              >
                                 {post.hidden ? "Hidden" : "Hide"}
                               </Button>
-                              <Button size="sm" variant="destructive" onClick={() => deletePost(post)}>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  deletePost(post);
+                                }}
+                              >
                                 Delete
                               </Button>
                             </div>
@@ -170,6 +208,22 @@ export default function CommunityGuardPage() {
               )}
             </CardContent>
           </Card>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Post Content</DialogTitle>
+                <DialogDescription>
+                  {selectedPost?.hidden
+                    ? selectedPost?.Author ?? "Unknown author"
+                    : "Hidden author"}{" "}
+                  · {formatDate(selectedPost?.CreatedAt)}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-sm text-slate-100">
+                {selectedPost?.Content ?? "No content available."}
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="reports">
@@ -179,7 +233,7 @@ export default function CommunityGuardPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-sm text-[var(--hud-muted)]">Loading reports...</p>
+                <p className="text-sm text-(--hud-muted)">Loading reports...</p>
               ) : (
                 <Table>
                   <TableHeader>
@@ -195,7 +249,7 @@ export default function CommunityGuardPage() {
                   <TableBody>
                     {reports.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-sm text-[var(--hud-muted)]">
+                        <TableCell colSpan={6} className="text-sm text-(--hud-muted)">
                           No reports found.
                         </TableCell>
                       </TableRow>
@@ -203,7 +257,7 @@ export default function CommunityGuardPage() {
                       reports.map((report) => (
                         <TableRow key={report.id}>
                           <TableCell>{report.reason ?? "n/a"}</TableCell>
-                          <TableCell className="text-xs text-[var(--hud-muted)]">
+                          <TableCell className="text-xs text-(--hud-muted)">
                             {report.postId ?? "n/a"}
                           </TableCell>
                           <TableCell>{report.reporterId ?? "n/a"}</TableCell>

@@ -49,7 +49,7 @@ export default function AuthShell({ children }: AuthShellProps) {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-[var(--hud-bg)] px-6 py-10">
+      <div className="min-h-screen bg-background px-6 py-10">
         <div className="mx-auto max-w-5xl space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -69,7 +69,7 @@ export default function AuthShell({ children }: AuthShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--hud-bg)] text-slate-100">
+    <div className="flex min-h-screen bg-background text-slate-100">
       <Sidebar />
       <div className="flex min-h-screen flex-1 flex-col">
         <Topbar email={userEmail} />

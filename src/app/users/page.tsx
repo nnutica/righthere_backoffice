@@ -6,6 +6,7 @@ import {
   collection,
   doc,
   getDocs,
+  Timestamp,
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
@@ -18,10 +19,11 @@ import { Button } from "@/components/ui/button";
 
 type UserItem = {
   id: string;
+  uid?: string;
   email?: string;
   role?: string;
   status?: string;
-  lastActiveAt?: { toDate: () => Date };
+  lastActiveAt?: Timestamp | Date | string | number | { seconds: number; nanoseconds?: number } | null;
 };
 
 const statusVariants: Record<string, "default" | "success" | "warning" | "danger"> = {
@@ -29,6 +31,28 @@ const statusVariants: Record<string, "default" | "success" | "warning" | "danger
   suspended: "warning",
   banned: "danger",
 };
+
+function formatLastActive(
+  value?: Timestamp | Date | string | number | { seconds: number; nanoseconds?: number } | null
+) {
+  if (!value) return "n/a";
+  if (value instanceof Date) return value.toLocaleString();
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toLocaleString();
+    return "n/a";
+  }
+  try {
+    if ("toDate" in value && typeof value.toDate === "function") {
+      return value.toDate().toLocaleString();
+    }
+    if ("seconds" in value && typeof value.seconds === "number") {
+      return new Timestamp(value.seconds, value.nanoseconds ?? 0).toDate().toLocaleString();
+    }
+  } catch {
+    return "n/a";
+  }
+}
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -39,11 +63,29 @@ export default function UsersPage() {
     const loadUsers = async () => {
       try {
         const snapshot = await getDocs(collection(db, "users"));
-        setUsers(
-          snapshot.docs.map((docSnap) => ({
+        const byId = new Map<string, UserItem>();
+        snapshot.docs.forEach((docSnap) => {
+          byId.set(docSnap.id, {
             id: docSnap.id,
             ...(docSnap.data() as Omit<UserItem, "id">),
-          }))
+          });
+        });
+        setUsers(
+          snapshot.docs.map((docSnap) => {
+            const base = {
+              id: docSnap.id,
+              ...(docSnap.data() as Omit<UserItem, "id">),
+            } as UserItem;
+            if (base.role || !base.uid) return base;
+            const uidMatch = byId.get(base.uid);
+            if (!uidMatch) return base;
+            return {
+              ...base,
+              role: base.role ?? uidMatch.role,
+              status: base.status ?? uidMatch.status,
+              lastActiveAt: base.lastActiveAt ?? uidMatch.lastActiveAt,
+            };
+          })
         );
       } catch (error) {
         console.error("Failed to load users", error);
@@ -88,7 +130,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div>
         <h2 className="font-display text-2xl font-semibold">Users</h2>
-        <p className="text-sm text-[var(--hud-muted)]">
+        <p className="text-sm text-(--hud-muted)">
           Search users and enforce status changes.
         </p>
       </div>
@@ -104,7 +146,7 @@ export default function UsersPage() {
             onChange={(event) => setSearch(event.target.value)}
           />
           {loading ? (
-            <p className="text-sm text-[var(--hud-muted)]">Loading users...</p>
+            <p className="text-sm text-(--hud-muted)">Loading users...</p>
           ) : (
             <Table>
               <TableHeader>
@@ -120,14 +162,14 @@ export default function UsersPage() {
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-sm text-[var(--hud-muted)]">
+                    <TableCell colSpan={6} className="text-sm text-(--hud-muted)">
                       No users match the search.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filtered.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="text-xs text-[var(--hud-muted)]">
+                      <TableCell className="text-xs text-(--hud-muted)">
                         {user.id.slice(0, 8)}...
                       </TableCell>
                       <TableCell>{user.email ?? "n/a"}</TableCell>
@@ -137,10 +179,8 @@ export default function UsersPage() {
                           {user.status ?? "unknown"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-[var(--hud-muted)]">
-                        {user.lastActiveAt?.toDate
-                          ? user.lastActiveAt.toDate().toLocaleString()
-                          : "n/a"}
+                      <TableCell className="text-xs text-(--hud-muted)">
+                        {formatLastActive(user.lastActiveAt)}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-2">

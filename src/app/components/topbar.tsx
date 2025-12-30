@@ -19,10 +19,10 @@ interface TopbarProps {
 
 export default function Topbar({ email }: TopbarProps) {
   return (
-    <header className="sticky top-0 z-20 border-b border-[var(--hud-panel-border)] bg-[rgba(7,11,22,0.85)] backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-(--hud-panel-border) bg-[rgba(7,11,22,0.85)] backdrop-blur">
       <div className="flex items-center justify-between gap-4 px-6 py-4">
         <div className="relative w-full max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-[var(--hud-muted)]" />
+          <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-(--hud-muted)" />
           <Input
             placeholder="Search signals, users, quests..."
             className="pl-10"
