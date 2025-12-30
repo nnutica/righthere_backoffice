@@ -9,7 +9,7 @@ function getTodayId() {
 }
 
 async function updateUsageDaily(latencyMs: number, isError: boolean) {
-  const db = getServerDb();
+  const db = await getServerDb();
   const docRef = doc(db, "ai_usage_daily", getTodayId());
 
   await runTransaction(db, async (tx) => {

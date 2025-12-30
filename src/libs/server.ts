@@ -13,7 +13,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-export function getServerDb() {
+export async function getServerDb() {
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   return getFirestore(app);
 }
