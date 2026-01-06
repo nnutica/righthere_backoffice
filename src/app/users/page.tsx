@@ -151,7 +151,7 @@ export default function UsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
+                  
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
@@ -169,9 +169,7 @@ export default function UsersPage() {
                 ) : (
                   filtered.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="text-xs text-(--hud-muted)">
-                        {user.id.slice(0, 8)}...
-                      </TableCell>
+                      
                       <TableCell>{user.email ?? "n/a"}</TableCell>
                       <TableCell>{user.role ?? "n/a"}</TableCell>
                       <TableCell>
